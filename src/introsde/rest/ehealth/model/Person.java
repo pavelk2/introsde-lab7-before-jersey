@@ -7,10 +7,15 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 @Entity  // indicates that this class is an entity to persist in DB
 @Table(name="Person") // to whole table must be persisted 
 @NamedQuery(name="Person.findAll", query="SELECT p FROM Person p")
+@XmlRootElement
 public class Person implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id // defines this attributed as the one that identifies the entity
@@ -46,6 +51,7 @@ public class Person implements Serializable {
     public int getIdPerson(){
     	return idPerson;
     }
+
     public String getLastname(){
     	return lastname;
     }
@@ -63,7 +69,7 @@ public class Person implements Serializable {
     }
     
     // setters
-    public void setId(int idPerson){
+    public void setIdPerson(int idPerson){
     	this.idPerson = idPerson;
     }
     public void setLastname(String lastname){

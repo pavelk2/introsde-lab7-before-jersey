@@ -1,10 +1,27 @@
 package introsde.rest.ehealth.model;
 
+import introsde.rest.ehealth.dao.LifeCoachDao;
+import introsde.rest.ehealth.model.Person;
+
 import java.io.Serializable;
-
-import javax.persistence.*;
-
+import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 
 /**
@@ -12,51 +29,38 @@ import java.util.Date;
  * 
  */
 @Entity
-@Table(name="\"HealthMeasureHistory\"")
+@Table(name="HealthMeasureHistory")
 @NamedQuery(name="HealthMeasureHistory.findAll", query="SELECT h FROM HealthMeasureHistory h")
+@XmlRootElement
 public class HealthMeasureHistory implements Serializable {
 	private static final long serialVersionUID = 1L;
-	@Id // defines this attributed as the one that identifies the entity
-    @GeneratedValue(generator="sqlite_healthmeasurehistory")
-    @TableGenerator(name="sqlite_healthmeasurehistory", table="sqlite_sequence",
-        pkColumnName="name", valueColumnName="seq",
-        pkColumnValue="HealthMeasureHistory")
-	@Column(name="\"idMeasureDef\"")
-	private Object idMeasureDef;
 
-	@Column(name="\"idMeasureDefinition\"")
-	private int idMeasureDefinition;
-
-	@Column(name="\"idMeasureHistory\"")
+	@Id
+	@GeneratedValue(generator="sqlite_mhistory")
+	@TableGenerator(name="sqlite_mhistory", table="sqlite_sequence",
+	    pkColumnName="name", valueColumnName="seq",
+	    pkColumnValue="HealthMeasureHistory")
+	@Column(name="idMeasureHistory")
 	private int idMeasureHistory;
 
-	@Column(name="\"idPerson\"")
-	private int idPerson;
-
 	@Temporal(TemporalType.DATE)
-	@Column(name="\"timestamp\"")
+	@Column(name="timestamp")
 	private Date timestamp;
 
-	@Column(name="\"value\"")
+	@Column(name="value")
 	private String value;
 
+	@ManyToOne
+	@JoinColumn(name = "idMeasureDef", referencedColumnName = "idMeasureDef")
+	private MeasureDefinition measureDefinition;
+
+	// notice that we haven't included a reference to the history in Person
+	// this means that we don't have to make this attribute XmlTransient
+	@ManyToOne
+	@JoinColumn(name = "idPerson", referencedColumnName = "idPerson")
+	private Person person;
+
 	public HealthMeasureHistory() {
-	}
-
-	public Object getIdMeasureDef() {
-		return this.idMeasureDef;
-	}
-
-	public void setIdMeasureDef(Object idMeasureDef) {
-		this.idMeasureDef = idMeasureDef;
-	}
-
-	public int getIdMeasureDefinition() {
-		return this.idMeasureDefinition;
-	}
-
-	public void setIdMeasureDefinition(int idMeasureDefinition) {
-		this.idMeasureDefinition = idMeasureDefinition;
 	}
 
 	public int getIdMeasureHistory() {
@@ -65,14 +69,6 @@ public class HealthMeasureHistory implements Serializable {
 
 	public void setIdMeasureHistory(int idMeasureHistory) {
 		this.idMeasureHistory = idMeasureHistory;
-	}
-
-	public int getIdPerson() {
-		return this.idPerson;
-	}
-
-	public void setIdPerson(int idPerson) {
-		this.idPerson = idPerson;
 	}
 
 	public Date getTimestamp() {
@@ -91,4 +87,64 @@ public class HealthMeasureHistory implements Serializable {
 		this.value = value;
 	}
 
+	public MeasureDefinition getMeasureDefinition() {
+	    return measureDefinition;
+	}
+
+	public void setMeasureDefinition(MeasureDefinition param) {
+	    this.measureDefinition = param;
+	}
+
+	public Person getPerson() {
+	    return person;
+	}
+
+	public void setPerson(Person param) {
+	    this.person = param;
+	}
+
+	// database operations
+	public static HealthMeasureHistory getHealthMeasureHistoryById(int id) {
+		EntityManager em = LifeCoachDao.instance.createEntityManager();
+		HealthMeasureHistory p = em.find(HealthMeasureHistory.class, id);
+		LifeCoachDao.instance.closeConnections(em);
+		return p;
+	}
+	
+	public static List<HealthMeasureHistory> getAll() {
+		EntityManager em = LifeCoachDao.instance.createEntityManager();
+	    List<HealthMeasureHistory> list = em.createNamedQuery("HealthMeasureHistory.findAll", HealthMeasureHistory.class).getResultList();
+	    LifeCoachDao.instance.closeConnections(em);
+	    return list;
+	}
+	
+	public static HealthMeasureHistory saveHealthMeasureHistory(HealthMeasureHistory p) {
+		EntityManager em = LifeCoachDao.instance.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		tx.begin();
+		em.persist(p);
+		tx.commit();
+	    LifeCoachDao.instance.closeConnections(em);
+	    return p;
+	}
+	
+	public static HealthMeasureHistory updateHealthMeasureHistory(HealthMeasureHistory p) {
+		EntityManager em = LifeCoachDao.instance.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		tx.begin();
+		p=em.merge(p);
+		tx.commit();
+	    LifeCoachDao.instance.closeConnections(em);
+	    return p;
+	}
+	
+	public static void removeHealthMeasureHistory(HealthMeasureHistory p) {
+		EntityManager em = LifeCoachDao.instance.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		tx.begin();
+	    p=em.merge(p);
+	    em.remove(p);
+	    tx.commit();
+	    LifeCoachDao.instance.closeConnections(em);
+	}
 }
